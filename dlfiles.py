@@ -18,7 +18,7 @@ def crawl(src, dest = '', filetypes = [".pdf"], log = True):
   src   - the source url
   dest  - the destination folder
   filetypes - a list of filetypes to look for and download
-  log  - log of all the files downloaded, tab separated
+  log  - log of all the files downloaded
   """
   flog_str = ''
   found = False
@@ -101,7 +101,7 @@ def main():
   # dest = input('Download folder: ')
   ### MAKE SURE TO CHANGE IT TO r FOR RAW STRING
   dest = r'C:\Users\Tetranoir\Desktop\mus\zelda\OOT'
-  crawl(src, dest, ['.mp3'])
+  crawl(src, dest, ['.mp3'], False)
 
   
 # Boilerplate #
