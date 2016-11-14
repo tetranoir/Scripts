@@ -8,11 +8,22 @@ arno gau
 """
 
 import urllib.request
+import urllib.parse
 import os.path
 import shutil
 import re
 
-def crawl(src, dest = '', filetypes = [".pdf"], log = True):
+def unquote_filename(f):
+  reg = '%\d\d'
+  m = re.search(reg, f)
+  if m:
+    nf = urllib.parse.unquote(f)
+    return unquote_filename(nf)
+  else:
+    return f
+
+
+def crawl(src, dest = '', filetypes = ['.mp3'], log = True):
   """
   Crawls a website for files of specified filetypes that are hyperlinked to.
   src   - the source url
@@ -20,19 +31,22 @@ def crawl(src, dest = '', filetypes = [".pdf"], log = True):
   filetypes - a list of filetypes to look for and download
   log  - log of all the files downloaded
   """
-  flog_str = ''
+  flog_str = '' # log string
   found = False
+  if len(filetypes) == 0: # checks if no filetypes are specified
+    filetypes = ['']
   
   response  = urllib.request.urlopen(src)
   print('Crawling..')
   reg = '<a href="(.+{})">(.+)</a>' # formatter string for regex string
-  #reg = '<a href="(.+{})"><.+title="(.+)"'
+  #reg = '<a href="(.+{})"><.+title="(.+)"' # alternate
   
   for line in response:
     line = line.decode("utf-8")
-    for type in filetypes:
-      type = re.escape(type)
-      match = re.search(reg.format(type), line)
+    
+    for t in filetypes:
+      t = re.escape(t)
+      match = re.search(reg.format(t), line)
       if match:
         found = True
         break # file cant end in multiple types
@@ -43,6 +57,7 @@ def crawl(src, dest = '', filetypes = [".pdf"], log = True):
     url = match.group(1) # the complete file url
     
     dlfile_name = url.rsplit('/', 1)[-1] # name taken from the url
+    dlfile_name = unquote_filename(dlfile_name)
     file_dest = os.path.join(dest, dlfile_name)
     
     link_log = 'link: ' + link_name
@@ -69,7 +84,7 @@ def crawl(src, dest = '', filetypes = [".pdf"], log = True):
       break
     except Exception as e:
       status_log = 'Failed -- ' + str(e)
-      print('Failed')
+      print('Failed, no idea what happened, check log')
     finally:
       print('')
       try:
@@ -77,8 +92,7 @@ def crawl(src, dest = '', filetypes = [".pdf"], log = True):
         resp.close()
       except:
         pass
-      
-    
+        
     flog_str = flog_str + '%s\n%s\n%s\n%s\n\n' % (link_log, url_log, file_log, status_log)
   
   if found == False:
@@ -87,21 +101,25 @@ def crawl(src, dest = '', filetypes = [".pdf"], log = True):
     
   response.close()
   
-  if log:
-    flog = open(__file__ + '.log', 'w')
-    flog.write(flog_str)
-    flog.close()
-    
+
+  print('Logged at %s' % (__file__ + '.log'))
+  flog = open(__file__ + '.log', 'w')
+  flog.write(flog_str)
+  flog.close()
+  print('End')
   
 def main():
   # input('Start')
-  # src = input('Website: ')
-  src = "http://zeldauniverse.net/media/music/ocarina-of-time-rearranged/"
+  # src = input('URI: ')
+  # src = 'http://goto.ucsd.edu/~rjhala/130/hw4/arith_notes/'
+  src = "http://anime.thehylia.com/soundtracks/album/shigatsu-wa-kimi-no-uso-original-song-soundtrack"
+  # src = "http://zeldauniverse.net/media/music/ocarina-of-time-rearranged/"
   # src = 'http://pages.cs.wisc.edu/~remzi/OSTEP/'
   # dest = input('Download folder: ')
-  ### MAKE SURE TO CHANGE IT TO r FOR RAW STRING
-  dest = r'C:\Users\Tetranoir\Desktop\mus\zelda\OOT'
-  crawl(src, dest, ['.mp3'], False)
+  ### MAKE SURE TO CHANGE DEST TO r FOR RAW STRING
+  # dest = r'C:\Users\Tetranoir\Desktop\mus\zelda\OOT'
+  dest = r'C:\Users\Tetranoir\Desktop\shigatsu wa kimi no uso'
+  crawl(src, dest)
 
   
 # Boilerplate #
